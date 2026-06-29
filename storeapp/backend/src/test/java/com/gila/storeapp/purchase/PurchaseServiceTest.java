@@ -35,7 +35,7 @@ class PurchaseServiceTest {
             new BigDecimal("0.80")
         )).id();
 
-        PurchaseResponse response = purchaseService.purchase(new PurchaseRequest(List.of(
+        PurchaseResponse response = purchaseService.purchase(new PurchaseRequest(null, List.of(
             new PurchaseRequest.PurchaseLineRequest(productId, 2)
         )));
 
@@ -56,7 +56,7 @@ class PurchaseServiceTest {
             new BigDecimal("0.30")
         )).id();
 
-        assertThatThrownBy(() -> purchaseService.purchase(new PurchaseRequest(List.of(
+        assertThatThrownBy(() -> purchaseService.purchase(new PurchaseRequest(null, List.of(
             new PurchaseRequest.PurchaseLineRequest(productId, 2)
         )))).isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("Not enough stock");

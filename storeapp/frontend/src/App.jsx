@@ -1,7 +1,10 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { CartPanel } from './components/CartPanel.jsx';
 import { Header } from './components/Header.jsx';
 import { ImportIssues } from './components/ImportIssues.jsx';
+import { LoginPage } from './components/LoginPage.jsx';
+import { OrderHistory } from './components/OrderHistory.jsx';
+import { PurchaseToast } from './components/PurchaseToast.jsx';
 import { PurchaseProductList } from './components/PurchaseProductList.jsx';
 import { ProductForm } from './components/ProductForm.jsx';
 import { ProductTable } from './components/ProductTable.jsx';
@@ -10,11 +13,11 @@ import { Toolbar } from './components/Toolbar.jsx';
 import { useProducts } from './hooks/useProducts.js';
 
 export function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loginCredentials, setLoginCredentials] = useState({ username: 'admin', password: 'admin123' });
+  const [loginError, setLoginError] = useState('');
   const [activeTab, setActiveTab] = useState('catalog');
-  const [currentUser, setCurrentUser] = useState({
-    name: 'Avery Stone',
-    role: 'ADMIN'
-  });
+  const [showOrderHistory, setShowOrderHistory] = useState(false);
   const {
     products,
     categories,
@@ -23,6 +26,9 @@ export function App() {
     editingId,
     cart,
     notice,
+    purchaseReceipt,
+    orderHistory,
+    historyLoading,
     busy,
     importReport,
     cartTotal,
@@ -37,32 +43,71 @@ export function App() {
     cancelEdit,
     removeProduct,
     importProducts,
-    checkout
+    checkout,
+    dismissPurchaseReceipt,
+    loadOrderHistory
   } = useProducts();
-  const isAdmin = currentUser.role === 'ADMIN';
+  const isAdmin = currentUser?.role === 'ADMIN';
 
-  function switchRole() {
-    setCurrentUser((user) => {
-      const nextRole = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
-      if (nextRole === 'USER') {
-        setActiveTab('purchase');
-      }
-      return { ...user, role: nextRole };
-    });
+  function updateLoginCredentials(changes) {
+    setLoginCredentials((current) => ({ ...current, ...changes }));
+    setLoginError('');
+  }
+
+  function login(user) {
+    if (!user) {
+      setLoginError('Invalid username or password');
+      return;
+    }
+    setCurrentUser(user);
+    setActiveTab(user.role === 'ADMIN' ? 'catalog' : 'purchase');
+  }
+
+  function logout() {
+    setCurrentUser(null);
+    setLoginCredentials({ username: 'admin', password: 'admin123' });
+    setLoginError('');
+    setShowOrderHistory(false);
+    dismissPurchaseReceipt();
+  }
+
+  async function openOrderHistory() {
+    setShowOrderHistory(true);
+    await loadOrderHistory();
+  }
+
+  if (!currentUser) {
+    return (
+      <LoginPage
+        credentials={loginCredentials}
+        error={loginError}
+        onChange={updateLoginCredentials}
+        onLogin={login}
+      />
+    );
   }
 
   return (
     <main className="app-shell">
       <Header
         user={currentUser}
-        onSwitchRole={switchRole}
+        onOrderHistory={openOrderHistory}
+        onLogout={logout}
       />
 
       <Tabs activeTab={activeTab} isAdmin={isAdmin} onChange={setActiveTab} />
 
       {notice && <div className={`notice ${notice.type}`}>{notice.message}</div>}
 
-      {activeTab === 'catalog' && isAdmin && (
+      {showOrderHistory && (
+        <OrderHistory
+          orders={orderHistory}
+          loading={historyLoading}
+          onClose={() => setShowOrderHistory(false)}
+        />
+      )}
+
+      {activeTab === 'catalog' && isAdmin && !showOrderHistory && (
         <>
           <Toolbar
             filters={filters}
@@ -94,7 +139,7 @@ export function App() {
         </>
       )}
 
-      {activeTab === 'purchase' && (
+      {activeTab === 'purchase' && !showOrderHistory && (
         <>
           <Toolbar
             filters={filters}
@@ -123,6 +168,8 @@ export function App() {
           </section>
         </>
       )}
+
+      <PurchaseToast receipt={purchaseReceipt} onClose={dismissPurchaseReceipt} />
     </main>
   );
 }

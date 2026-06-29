@@ -17,6 +17,9 @@ public class ImportJob {
 
     private String fileName;
 
+    @Column(unique = true)
+    private String idempotencyKey;
+
     @Enumerated(EnumType.STRING)
     private ImportJobStatus status = ImportJobStatus.PENDING;
 
@@ -45,6 +48,14 @@ public class ImportJob {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public ImportJobStatus getStatus() {

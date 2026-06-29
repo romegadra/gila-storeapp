@@ -2,10 +2,10 @@ spring:
   application:
     name: storeapp
   datasource:
-    url: jdbc:h2:mem:storeapp;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    url: ${STOREAPP_DB_URL:jdbc:h2:mem:storeapp;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
+    driver-class-name: ${STOREAPP_DB_DRIVER:org.h2.Driver}
+    username: ${STOREAPP_DB_USER:sa}
+    password: ${STOREAPP_DB_PASSWORD:}
   h2:
     console:
       enabled: true
@@ -20,7 +20,7 @@ spring:
 
 app:
   csv:
-    seed-path: products.csv
+    seed-path: ${STOREAPP_SEED_CSV:products.csv}
 
 management:
   endpoints:

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { LogOut, Menu, ShieldCheck, Store, UserRound } from 'lucide-react';
+﻿import { useState } from 'react';
+import { History, LogOut, Menu, Store, UserRound } from 'lucide-react';
 
-export function Header({ user, onSwitchRole }) {
+export function Header({ user, onOrderHistory, onLogout }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const initials = user.name
     .split(' ')
@@ -9,10 +9,9 @@ export function Header({ user, onSwitchRole }) {
     .join('')
     .slice(0, 2)
     .toUpperCase();
-  const nextRole = user.role === 'ADMIN' ? 'User' : 'Admin';
 
-  function handleSwitchRole() {
-    onSwitchRole();
+  function openOrderHistory() {
+    onOrderHistory();
     setMenuOpen(false);
   }
 
@@ -57,11 +56,11 @@ export function Header({ user, onSwitchRole }) {
                 <UserRound size={16} />
                 Profile
               </button>
-              <button type="button" role="menuitem" onClick={handleSwitchRole}>
-                <ShieldCheck size={16} />
-                Switch to {nextRole}
+              <button type="button" role="menuitem" onClick={openOrderHistory}>
+                <History size={16} />
+                Order history
               </button>
-              <button className="menu-danger" type="button" role="menuitem" onClick={() => setMenuOpen(false)}>
+              <button className="menu-danger" type="button" role="menuitem" onClick={onLogout}>
                 <LogOut size={16} />
                 Logout
               </button>

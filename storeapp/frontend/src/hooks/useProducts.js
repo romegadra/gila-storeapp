@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import {
   createImportJob,
   createProduct,
@@ -8,9 +8,9 @@ import {
   fetchProducts,
   updateProduct
 } from '../api/productsApi.js';
-import { createPurchase } from '../api/purchasesApi.js';
+import { createPurchase, fetchPurchases } from '../api/purchasesApi.js';
 import { emptyProductForm, formToProduct, productToForm } from '../utils/productForm.js';
-import { money } from '../utils/formatters.js';
+import { newIdempotencyKey } from '../utils/idempotency.js';
 
 export function useProducts() {
   const [products, setProducts] = useState([]);
@@ -20,6 +20,9 @@ export function useProducts() {
   const [editingId, setEditingId] = useState(null);
   const [cart, setCart] = useState({});
   const [notice, setNotice] = useState(null);
+  const [purchaseReceipt, setPurchaseReceipt] = useState(null);
+  const [orderHistory, setOrderHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [importReport, setImportReport] = useState(null);
 
@@ -118,7 +121,7 @@ export function useProducts() {
     if (!file) return;
 
     await run(async () => {
-      const job = await createImportJob(file);
+      const job = await createImportJob(file, newIdempotencyKey('import'));
       setNotice({ type: 'success', message: `Import job #${job.id} queued` });
       const completed = await waitForImport(job.id);
       setImportReport(completed);
@@ -143,11 +146,28 @@ export function useProducts() {
     }
 
     await run(async () => {
-      const purchase = await createPurchase(items);
+      const purchase = await createPurchase(items, newIdempotencyKey('purchase'));
       setCart({});
-      setNotice({ type: 'success', message: `Purchase #${purchase.id} paid for $${money(purchase.total)}` });
+      setPurchaseReceipt(purchase);
+      setOrderHistory((current) => [purchase, ...current.filter((order) => order.id !== purchase.id)]);
+      setNotice({ type: 'success', message: 'Payment completed and inventory updated' });
       setProducts(await fetchProducts(filters));
     });
+  }
+
+  function dismissPurchaseReceipt() {
+    setPurchaseReceipt(null);
+  }
+
+  async function loadOrderHistory() {
+    try {
+      setHistoryLoading(true);
+      setOrderHistory(await fetchPurchases());
+    } catch (error) {
+      setNotice({ type: 'error', message: error.message });
+    } finally {
+      setHistoryLoading(false);
+    }
   }
 
   async function waitForImport(jobId) {
@@ -199,6 +219,9 @@ export function useProducts() {
     editingId,
     cart,
     notice,
+    purchaseReceipt,
+    orderHistory,
+    historyLoading,
     busy,
     importReport,
     cartTotal,
@@ -213,6 +236,8 @@ export function useProducts() {
     cancelEdit,
     removeProduct,
     importProducts,
-    checkout
+    checkout,
+    dismissPurchaseReceipt,
+    loadOrderHistory
   };
 }

@@ -15,9 +15,17 @@ public class ImportJobService {
         this.importJobWorker = importJobWorker;
     }
 
-    public ImportJobResponse createJob(String fileName, byte[] content) {
+    public ImportJobResponse createJob(String fileName, byte[] content, String idempotencyKey) {
+        String cleanKey = clean(idempotencyKey);
+        if (cleanKey != null) {
+            var existing = importJobRepository.findByIdempotencyKey(cleanKey);
+            if (existing.isPresent()) {
+                return ImportJobResponse.from(existing.get());
+            }
+        }
         ImportJob job = new ImportJob();
         job.setFileName(fileName);
+        job.setIdempotencyKey(cleanKey);
         ImportJob saved = importJobRepository.save(job);
         importJobWorker.process(saved.getId(), content);
         return ImportJobResponse.from(saved);
@@ -37,4 +45,10 @@ public class ImportJobService {
             .toList();
     }
 
+    private String clean(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
+    }
 }

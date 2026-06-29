@@ -4,8 +4,11 @@ export async function fetchProducts(filters = {}) {
   const params = new URLSearchParams();
   if (filters.query) params.set('query', filters.query);
   if (filters.category) params.set('category', filters.category);
+  params.set('page', filters.page ?? 0);
+  params.set('size', filters.size ?? 25);
   const suffix = params.toString() ? `?${params}` : '';
-  return apiRequest(`/api/products${suffix}`);
+  const page = await apiRequest(`/api/products/page${suffix}`);
+  return page.content || [];
 }
 
 export function fetchCategories() {
@@ -30,9 +33,10 @@ export function deleteProduct(id) {
   return apiRequest(`/api/products/${id}`, { method: 'DELETE' });
 }
 
-export function createImportJob(file) {
+export function createImportJob(file, idempotencyKey) {
   const body = new FormData();
   body.append('file', file);
+  body.append('idempotencyKey', idempotencyKey);
   return apiRequest('/api/products/import-jobs', { method: 'POST', body });
 }
 

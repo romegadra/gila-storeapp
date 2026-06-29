@@ -4,6 +4,9 @@ import com.gila.storeapp.shared.NotFoundException;
 import com.gila.storeapp.shared.TextSafety;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +28,15 @@ public class ProductService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ProductResponse> search(String query, String category, int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        PageRequest pageRequest = PageRequest.of(safePage, safeSize, Sort.by("name").ascending());
+        return productRepository.searchPage(textSafety.clean(query), textSafety.clean(category), pageRequest)
+            .map(ProductResponse::from);
+    }
+
+    @Transactional(readOnly = true)
     public List<String> categories() {
         return productRepository.findCategories();
     }
@@ -32,6 +44,12 @@ public class ProductService {
     @Transactional(readOnly = true)
     public Product getProduct(Long id) {
         return productRepository.findById(id)
+            .orElseThrow(() -> new NotFoundException("Product not found"));
+    }
+
+    @Transactional(readOnly = true)
+    public Product getProductForUpdate(Long id) {
+        return productRepository.findByIdForUpdate(id)
             .orElseThrow(() -> new NotFoundException("Product not found"));
     }
 

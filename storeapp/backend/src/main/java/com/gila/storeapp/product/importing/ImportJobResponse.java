@@ -5,6 +5,7 @@ import java.time.Instant;
 public record ImportJobResponse(
     Long id,
     String fileName,
+    String idempotencyKey,
     ImportJobStatus status,
     int created,
     int updated,
@@ -18,6 +19,7 @@ public record ImportJobResponse(
         return new ImportJobResponse(
             job.getId(),
             job.getFileName(),
+            job.getIdempotencyKey(),
             job.getStatus(),
             job.getCreatedCount(),
             job.getUpdatedCount(),

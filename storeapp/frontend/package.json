@@ -7,7 +7,7 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test src/utils/formatters.test.js src/utils/productForm.test.js",
+    "test": "node --test src/auth/demoUsers.test.js src/utils/formatters.test.js src/utils/productForm.test.js",
     "test:e2e": "playwright test"
   },
   "dependencies": {

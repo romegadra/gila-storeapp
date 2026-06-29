@@ -1,7 +1,9 @@
 package com.gila.storeapp.purchase;
 
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -15,6 +17,11 @@ public class PurchaseController {
 
     public PurchaseController(PurchaseService purchaseService) {
         this.purchaseService = purchaseService;
+    }
+
+    @GetMapping
+    public List<PurchaseResponse> listPurchases() {
+        return purchaseService.listPurchases();
     }
 
     @PostMapping

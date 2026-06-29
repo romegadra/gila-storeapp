@@ -1,6 +1,7 @@
 package com.gila.storeapp.purchase;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,6 +21,9 @@ public class Purchase {
     private BigDecimal total;
 
     private String status;
+
+    @Column(unique = true)
+    private String idempotencyKey;
 
     private Instant purchasedAt = Instant.now();
 
@@ -44,6 +48,14 @@ public class Purchase {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public void setIdempotencyKey(String idempotencyKey) {
+        this.idempotencyKey = idempotencyKey;
     }
 
     public Instant getPurchasedAt() {

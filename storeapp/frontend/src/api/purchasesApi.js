@@ -1,8 +1,12 @@
-import { apiRequest } from './client.js';
+﻿import { apiRequest } from './client.js';
 
-export function createPurchase(items) {
+export function fetchPurchases() {
+  return apiRequest('/api/purchases');
+}
+
+export function createPurchase(items, idempotencyKey) {
   return apiRequest('/api/purchases', {
     method: 'POST',
-    body: JSON.stringify({ items })
+    body: JSON.stringify({ idempotencyKey, items })
   });
 }

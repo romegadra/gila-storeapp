@@ -7,6 +7,7 @@ import com.gila.storeapp.product.importing.ProductCsvImporter;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,9 +41,21 @@ public class ProductController {
     @GetMapping
     public List<ProductResponse> search(
         @RequestParam(required = false) String query,
-        @RequestParam(required = false) String category
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "25") int size
     ) {
-        return productService.search(query, category);
+        return productService.search(query, category, page, size).getContent();
+    }
+
+    @GetMapping("/page")
+    public Page<ProductResponse> searchPage(
+        @RequestParam(required = false) String query,
+        @RequestParam(required = false) String category,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "25") int size
+    ) {
+        return productService.search(query, category, page, size);
     }
 
     @GetMapping("/categories")
@@ -74,8 +87,11 @@ public class ProductController {
 
     @PostMapping("/import-jobs")
     @ResponseStatus(HttpStatus.ACCEPTED)
-    public ImportJobResponse importProductsAsync(@RequestParam("file") MultipartFile file) throws IOException {
-        return importJobService.createJob(file.getOriginalFilename(), file.getBytes());
+    public ImportJobResponse importProductsAsync(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam(required = false) String idempotencyKey
+    ) throws IOException {
+        return importJobService.createJob(file.getOriginalFilename(), file.getBytes(), idempotencyKey);
     }
 
     @GetMapping("/import-jobs/{id}")
